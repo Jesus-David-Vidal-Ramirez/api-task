@@ -102,7 +102,7 @@ class StatusTask extends Model
             return response()->json(['message' => 'Houston tenemos problemas'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return response()->json(['message' => 'informacion encontra', 'data' => $statuTask], Response::HTTP_OK);
+        return response()->json(['message' => 'informacion encontrada', 'data' => $statuTask], Response::HTTP_OK);
     }
 
     /**
@@ -131,7 +131,7 @@ class StatusTask extends Model
             return response()->json(['message' => 'Houston tenemos problemas'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return response()->json(['message' => 'informacion encontra', 'data' => $getStatuTask], Response::HTTP_OK);
+        return response()->json(['message' => 'Informacion actualizada', 'data' => $getStatuTask], Response::HTTP_OK);
     }
     /**
      * Summary of deletedStatuTask

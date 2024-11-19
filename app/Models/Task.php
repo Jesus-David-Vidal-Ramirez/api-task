@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,8 +49,14 @@ class Task extends Model
     {
         try {
             //code...
-            $task = Task::with(['status_id'])->whereStatus('0')->skip($offset)
-            ->take($limit)->get();
+            $user = User::getUser();
+            if(Gate::allows('read-task', $user->original['user'])) {
+                $task = Task::with(['status_id'])->whereStatus('0')->skip($offset)
+                ->take($limit)->get();
+            }else{
+                $task = Task::with(['status_id'])->whereStatus('0')->whereUserId($user->original['user']->id)->skip($offset)
+                ->take($limit)->get();
+            }
             
             if (!$task) {
                 return response()->json(['message' => 'sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
@@ -108,18 +115,23 @@ class Task extends Model
     {
         try {
             //code...
-            $task = Task::with(['status_id'])->whereStatus(0)->whereId($id)->first();
-
+            $task = Task::with(['status_id'])->whereStatus(0)->whereId($id)->first();  
+            
             if (empty($task)) {
                 return response()->json(['message' => 'Sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
             }
+
+            if(!Gate::allows('read-by-id-task', $task)) {
+                return response()->json(['message' => 'Sin Autorizacion', 'data' => []], Response::HTTP_FORBIDDEN);
+            }
+            
         } catch (\Throwable $th) {
             //throw $th;
             Log::error('Error en el metodo taskById' . json_encode($th->getMessage()));
             return response()->json(['message' => 'Houston tenemos problemas'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return response()->json(['message' => 'informacion encontra', 'data' => $task], Response::HTTP_OK);
+        return response()->json(['message' => 'informacion encontrada', 'data' => $task], Response::HTTP_OK);
     }
 
     /**
@@ -131,8 +143,12 @@ class Task extends Model
     public static function updatedTask($data, $task): JsonResponse
     {
         try {
-            //code...
+            //Autenticacion
             $getTask = Task::whereId($task->id)->whereStatus(0)->first();
+            if (!Gate::allows('update-task', $getTask)) {
+                return response()->json(['message' => 'Sin Autorizacion', 'data' => []], Response::HTTP_FORBIDDEN);
+            }
+
             if (empty($getTask)) {
                 return response()->json(['message' => 'Sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
             }
@@ -146,7 +162,7 @@ class Task extends Model
             return response()->json(['message' => 'Houston tenemos problemas'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return response()->json(['message' => 'informacion encontras', 'data' => $task->original['data']], Response::HTTP_OK);
+        return response()->json(['message' => 'informacion actualizada', 'data' => $task->original['data']], Response::HTTP_OK);
     }
     /**
      * Summary of deletedStatuTask
@@ -158,6 +174,9 @@ class Task extends Model
         try {
             //code...
             $getTask = Task::find(id: $task->id);
+            if (!Gate::allows('deleted-task', $getTask)) {
+                return response()->json(['message' => 'Sin Autorizacion', 'data' => []], Response::HTTP_FORBIDDEN);
+            }
 
             if (empty($getTask)) {
                 return response()->json(['message' => 'Sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
