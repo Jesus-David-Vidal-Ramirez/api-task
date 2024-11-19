@@ -65,6 +65,17 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
+    public function role()
+    {
+        return $this->belongsTo(role::class);
+    }
+
+    // Verifica si el usuario tiene el rol específico
+    public function hasRole($role)
+    {
+        return $this->role->name === $role;
+    }
+
     /// Services
     public static function login( $request ){
         $credentials = $request->only('email', 'password');
@@ -79,6 +90,7 @@ class User extends Authenticatable implements JWTSubject
         try {
             if($oUser->status !== 0) return response()->json(['error' => 'Inactive user', 'status' => 'error'], Response::HTTP_BAD_REQUEST);
             
+            //TODO Spatie
             // Obtener roles del usuario
             // $roles = $oUser->getRoleNames(); // Esto devolverá una colección de nombres de roles
 
@@ -132,6 +144,5 @@ class User extends Authenticatable implements JWTSubject
 
         return response()->json(compact('user','token'), Response::HTTP_CREATED);
     }
-
 
 }
