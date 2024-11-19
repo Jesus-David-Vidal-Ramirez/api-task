@@ -10,9 +10,12 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Task::getTaskAll();
+        //Implementamos la paginacion
+        $limit  = (int) ($request->limit ?? 25);
+        $offset = (int) ($request->offset ?? 0);
+        return Task::getTaskAll($limit, $offset);
     }
 
     /**
