@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\StatusTaskController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\JwtMiddleware;
 use Illuminate\Http\Request;
@@ -14,6 +16,9 @@ Route::post('/login', [UserController::class, 'login']);
 Route::middleware([JwtMiddleware::class])->group(function () {
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('/getUserByToken', [UserController::class, 'getUser']);
+    
+    Route::apiResource('/status-task', StatusTaskController::class);
+    Route::apiResource('/task', TaskController::class);
 
     
 });

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Http\JsonResponse;
@@ -111,8 +110,8 @@ class User extends Authenticatable implements JWTSubject
         return response()->json(compact('user'));
     }
 
-    public static function logout($request): JsonResponse {
-        // Se puede separa la logica del validator
+    public static function register($request): JsonResponse {
+        // Se puede separa la logica en las rules
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',

@@ -13,7 +13,7 @@ class UserController extends Controller
     // User registration
     public function register(Request $request)
     {
-        return User::logout($request );
+        return User::register($request );
     }
 
     // User login
@@ -35,4 +35,5 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Successfully logged out']);
     }
+    
 }
