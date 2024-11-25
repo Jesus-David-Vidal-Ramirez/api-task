@@ -57,8 +57,10 @@ class Task extends Model
                 $task = Task::with(['status_id'])->whereStatus('0')->whereUserId($user->original['user']->id)->skip($offset)
                 ->take($limit)->get();
             }
-            
-            if (!$task) {
+
+            // return response()->json(empty(!$task));
+
+            if ($task->isEmpty()) {
                 return response()->json(['message' => 'sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
             }
 

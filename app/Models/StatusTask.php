@@ -41,7 +41,7 @@ class StatusTask extends Model
         try {
             //code...
             $statusTask = StatusTask::whereStatus('0')->get();
-            if (!$statusTask) {
+            if ($statusTask->isEmpty()) {
                 return response()->json(['message' => 'sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
             }
 
