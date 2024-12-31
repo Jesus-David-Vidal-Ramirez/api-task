@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('statustask', function (Blueprint $table) {
             $table->id(); // Este campo debe ser la clave primaria
+            $table->string('title');
             $table->string('description');
             $table->tinyInteger('status')->default(0)->comment('0 = Activo 1 = Inactivo');
             $table->timestamps();

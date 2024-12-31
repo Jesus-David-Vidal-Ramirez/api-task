@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\StatusTask;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class StatusTaskController extends Controller
 {
@@ -11,7 +12,7 @@ class StatusTaskController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
+    {   
         return StatusTask::getStatusAll();
     }
     

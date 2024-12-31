@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\NotFound;
+use App\Models\StatusTask;
 use App\Models\Task;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -46,8 +49,45 @@ class TaskController extends Controller
     // /**
     //  * Remove the specified resource from storage.
     //  */
-    public function destroy(Task $task)
+    public function destroy($id)
     {
-        return Task::deletedTask($task);
+        return Task::deletedTask($id);
+    }
+
+    // public function test(Task $task)
+    // {
+    //     if( !$task ){
+
+    //         return 'vacio';
+    //     }
+    //     return $task;
+    //     try {
+    //         //code...
+    //         $url = route('task.index',);
+
+    //         return $url;
+    //     } catch (\Throwable $th) {
+    //         //throw $th;
+    //         return $th;
+    //     }
+    // }
+
+    public function test(Task $task)
+    {
+        return response()->json($task);
+       
+        // if(!empty($task)){
+        //     return response()->json('Vacio');
+        // }
+        // return response()->json('lleno');
+    }
+    public function statusTasks(Task $task, StatusTask $statusTask)
+    {
+        return response()->json($statusTask);
+       
+        // if(!empty($task)){
+        //     return response()->json('Vacio');
+        // }
+        // return response()->json('lleno');
     }
 }

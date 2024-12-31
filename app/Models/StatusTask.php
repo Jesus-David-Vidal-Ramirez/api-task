@@ -21,6 +21,7 @@ class StatusTask extends Model
      */
     protected $fillable = [
         'id',
+        'title',
         'description',
         'status',
     ];
@@ -63,6 +64,7 @@ class StatusTask extends Model
         try {
             //code...
             $validator = Validator::make($request->all(), [
+                'title' => 'required|string|max:255',
                 'description' => 'required|string|max:255'
             ]);
 
@@ -70,9 +72,7 @@ class StatusTask extends Model
                 return response()->json($validator->errors()->toJson(), Response::HTTP_BAD_REQUEST);
             }
             //TODO: hacer unica la descripcion y validarla
-            $statusTaskCreated = StatusTask::create([
-                'description' => $request->get('description'),
-            ]);
+            $statusTaskCreated = StatusTask::create($request->all());
 
             return response()->json(['message' => 'Creacion exitosa', 'data' => $statusTaskCreated], Response::HTTP_CREATED);
         } catch (\Throwable $th) {
@@ -122,7 +122,7 @@ class StatusTask extends Model
                 return response()->json(['message' => 'Sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
             }
 
-            StatusTask::whereId($statusTask->id)->whereStatus(0)->update(['description' => $data->description]);
+            StatusTask::whereId($statusTask->id)->whereStatus(0)->update(['title' => $data->title,'description' => $data->description]);
 
             $getStatuTask = StatusTask::whereId($statusTask->id)->first();
         } catch (\Throwable $th) {

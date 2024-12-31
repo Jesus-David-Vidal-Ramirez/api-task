@@ -6,10 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\JWTException;
-
-class JwtMiddleware
+class EnsureTokenIsValid
 {
     /**
      * Handle an incoming request.
@@ -18,12 +15,10 @@ class JwtMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        try {
-            JWTAuth::parseToken()->authenticate();
-        } catch (JWTException $e) {
-            return response()->json(['error' => 'Token not valid'], 401);
+        if ($request->input('token') !== 'my-secret-token') {
+            return response()->json('Error en el token',400);
         }
-
+ 
         return $next($request);
     }
 }
