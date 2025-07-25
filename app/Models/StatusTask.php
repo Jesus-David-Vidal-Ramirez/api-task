@@ -13,6 +13,7 @@ class StatusTask extends Model
 {
     use HasFactory;
 
+    public $timestamp = false;
     protected $table = 'statustask';
     /**
      * The attributes that are mass assignable.
@@ -21,6 +22,7 @@ class StatusTask extends Model
      */
     protected $fillable = [
         'id',
+        'title',
         'description',
         'status',
     ];
@@ -33,14 +35,14 @@ class StatusTask extends Model
     protected $hidden = [];
 
     /**
-     * Summary of getStatusAll
+     * List StatusTask getStatusAll
      * @return \Illuminate\Http\JsonResponse
      */
     public static function getStatusAll(): JsonResponse
     {
         try {
             //code...
-            $statusTask = StatusTask::whereStatus('0')->get();
+            $statusTask = StatusTask::whereStatus('0')->get(['id', 'title', 'description']);
             if ($statusTask->isEmpty()) {
                 return response()->json(['message' => 'sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
             }
@@ -54,7 +56,7 @@ class StatusTask extends Model
     }
 
     /**
-     * 
+     * creating of StatusTask createdStatuTask
      * @param mixed $description
      * @return \Illuminate\Http\JsonResponse
      */
@@ -63,14 +65,21 @@ class StatusTask extends Model
         try {
             //code...
             $validator = Validator::make($request->all(), [
-                'description' => 'required|string|max:255'
+                'title' => 'required|string|max:255',
+                'description' => 'required|string|max:255',
             ]);
 
             if ($validator->fails()) {
                 return response()->json($validator->errors()->toJson(), Response::HTTP_BAD_REQUEST);
             }
-            //TODO: hacer unica la descripcion y validarla
+
+            $titleExits = StatusTask::statuTaskByTitle($request->get('title'));
+            if (!empty($titleExits->getData()->data)) {
+                return $titleExits;
+            }
+
             $statusTaskCreated = StatusTask::create([
+                'title' => $request->get('title'),
                 'description' => $request->get('description'),
             ]);
 
@@ -83,7 +92,7 @@ class StatusTask extends Model
     }
 
     /**
-     * Summary of statuTaskById
+     * searching of a StatusTask statuTaskById
      * @param mixed $id
      * @return \Illuminate\Http\JsonResponse
      */
@@ -91,10 +100,10 @@ class StatusTask extends Model
     {
         try {
             //code...
-            $statuTask = StatusTask::whereStatus(0)->whereId($id)->first();
+            $statuTask = StatusTask::whereStatus(0)->whereId($id)->first(['id', 'title', 'description']);
 
             if (empty($statuTask)) {
-                return response()->json(['message' => 'Sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
+                return response()->json(['message' => 'Estado No Encontrado', 'data' => []], Response::HTTP_NOT_FOUND);
             }
         } catch (\Throwable $th) {
             //throw $th;
@@ -106,7 +115,7 @@ class StatusTask extends Model
     }
 
     /**
-     * Summary of updatedStatuTask
+     * updating the of a StatusTask updatedStatuTask
      * @param mixed $data
      * @param mixed $statusTask
      * @return \Illuminate\Http\JsonResponse
@@ -122,9 +131,13 @@ class StatusTask extends Model
                 return response()->json(['message' => 'Sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
             }
 
-            StatusTask::whereId($statusTask->id)->whereStatus(0)->update(['description' => $data->description]);
+            $titleExits = StatusTask::statuTaskByTitle($data->title);
+            if (!empty($titleExits->getData()->data)) {
+                return $titleExits;
+            }
+            StatusTask::whereId($statusTask->id)->whereStatus(0)->update(['title' => $data->title, 'description' => $data->description]);
 
-            $getStatuTask = StatusTask::whereId($statusTask->id)->first();
+            $getStatuTask = StatusTask::whereId($statusTask->id)->first(['id', 'title', 'description']);
         } catch (\Throwable $th) {
             //throw $th;
             Log::error('Error en el metodo updatedStatuTask' . json_encode($th->getMessage()));
@@ -134,7 +147,7 @@ class StatusTask extends Model
         return response()->json(['message' => 'Informacion actualizada', 'data' => $getStatuTask], Response::HTTP_OK);
     }
     /**
-     * Summary of deletedStatuTask
+     * StatusTask Of Deleted deletedStatuTask
      * @param mixed $statusTask
      * @return \Illuminate\Http\JsonResponse
      */
@@ -144,12 +157,11 @@ class StatusTask extends Model
             //code...
 
             $getStatuTask = StatusTask::whereId($statusTask->id)->whereStatus(0)->first();
-            
+
             if (empty($getStatuTask)) {
                 return response()->json(['message' => 'Sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
             }
             StatusTask::whereId($statusTask->id)->whereStatus(0)->update(['status' => 1]);
-            
         } catch (\Throwable $th) {
             //throw $th;
             Log::error('Error en el metodo deletedStatuTask' . json_encode($th->getMessage()));
@@ -157,5 +169,28 @@ class StatusTask extends Model
         }
 
         return response()->json(['message' => 'informacion eliminada', 'data' => ['id' => $getStatuTask->id]], Response::HTTP_OK);
+    }
+
+    /**
+     * searching of a StatusTask Title statuTaskByTitle
+     * @param mixed $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public static function statuTaskByTitle($title): JsonResponse
+    {
+        try {
+            //code...
+            $statuTask = StatusTask::whereStatus(0)->whereTitle($title)->first();
+
+            if (empty($statuTask)) {
+                return response()->json(['message' => 'Sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error('Error en el metodo statuTaskByTitle' . json_encode($th->getMessage()));
+            return response()->json(['message' => 'Houston tenemos problemas'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return response()->json(['message' => 'Titulo del estado existente', 'data' => $statuTask], Response::HTTP_OK);
     }
 }

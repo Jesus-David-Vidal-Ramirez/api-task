@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NewTask;
 use App\Models\Task;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class TaskController extends Controller
 {
@@ -16,7 +16,10 @@ class TaskController extends Controller
         //Implementamos la paginacion
         $limit  = (int) ($request->limit ?? 25);
         $offset = (int) ($request->offset ?? 0);
-        return Task::getTaskAll($limit, $offset);
+
+        $response = Task::getTaskAll($limit, $offset);
+        // NewTask::dispatch($response);
+        return $response;
     }
 
     /**
@@ -24,7 +27,9 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        return Task::createdTask($request);
+        $response = Task::createdTask($request);
+        NewTask::dispatch($response);
+        return $response;
     }
 
     /**
@@ -49,5 +54,13 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         return Task::deletedTask($task);
+    }
+
+    // /**
+    //  * Update status the specified resource in storage.
+    //  */
+    public function updatedStatusTask(Request $request, $id)
+    {
+        return Task::updatedStatusTask($request, $id);
     }
 }

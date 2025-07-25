@@ -16,6 +16,7 @@ class Task extends Model
 {
     use HasFactory;
 
+    public $timestamp = false;
     protected $table = 'task';
     /**
      * The attributes that are mass assignable.
@@ -24,10 +25,14 @@ class Task extends Model
      */
     protected $fillable = [
         'id',
+        'title',
         'description',
         'user_id',
+        'responsible',
         'status_id',
         'status',
+        'date_start',
+        'date_end',
     ];
 
     /**
@@ -37,12 +42,17 @@ class Task extends Model
      */
     protected $hidden = [];
 
-    public function status_id(): BelongsTo {
+    public function status_id(): BelongsTo
+    {
         return $this->belongsTo(StatusTask::class, 'status_id')->select('id', 'description');
+    }
+    public function user_id()
+    {
+        return $this->hasOne(User::class, 'id', 'responsible')->select('id', 'name');
     }
 
     /**
-     * Summary of getTaskAll
+     * list task getTaskAll
      * @return mixed|\Illuminate\Http\JsonResponse
      */
     public static function getTaskAll($limit, $offset): JsonResponse
@@ -50,15 +60,33 @@ class Task extends Model
         try {
             //code...
             $user = User::getUser();
-            if(Gate::allows('read-task', $user->original['user'])) {
-                $task = Task::with(['status_id'])->whereStatus('0')->skip($offset)
-                ->take($limit)->get();
-            }else{
-                $task = Task::with(['status_id'])->whereStatus('0')->whereUserId($user->original['user']->id)->skip($offset)
-                ->take($limit)->get();
+            if (Gate::allows('read-task', $user->original['user'])) {
+                $task = Task::with(['status_id', 'user_id'])->whereStatus('0')->skip($offset)
+                    ->take($limit)->get([
+                        'date_end',
+                        'date_start',
+                        'description',
+                        'id',
+                        'responsible',
+                        'status_id',
+                        'status',
+                        'title',
+                        'user_id',
+                    ]);
+            } else {
+                $task = Task::with(['status_id', 'user_id'])->whereStatus('0')->whereUserId($user->original['user']->id)->skip($offset)
+                    ->take($limit)->get([
+                        'date_end',
+                        'date_start',
+                        'description',
+                        'id',
+                        'responsible',
+                        'status_id',
+                        'status',
+                        'title',
+                        'user_id',
+                    ]);
             }
-
-            // return response()->json(empty(!$task));
 
             if ($task->isEmpty()) {
                 return response()->json(['message' => 'sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
@@ -73,7 +101,7 @@ class Task extends Model
     }
 
     /**
-     * Summary of createdTask
+     * creating of task createdTask
      * @param mixed $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -82,7 +110,11 @@ class Task extends Model
         try {
             //code...
             $validator = Validator::make($request->all(), [
-                'description' => 'required|string|max:255'
+                'description' => 'required|string|max:255',
+                'title' => 'required|string|max:50',
+                'responsible' => 'required|integer',
+                'date_start' => 'required|string',
+                'date_end' => 'required|string',
             ]);
 
             if ($validator->fails()) {
@@ -91,14 +123,17 @@ class Task extends Model
 
             $userId = JWTAuth::parseToken()->authenticate()->id;
 
-            //TODO: hacer unica la descripcion y validarla
             $taskCreated = Task::create([
+                'date_end' => $request->get('date_end'),
+                'date_start' => $request->get('date_start'),
                 'description' => $request->get('description'),
-                'user_id' => $userId,
+                'responsible' => $request->get('responsible'),
                 'status_id' => 1,
+                'title' => $request->get('title'),
+                'user_id' => $userId,
             ]);
 
-            $task = Task::with(['status_id'])->whereStatus(0)->whereId($taskCreated->id)->first();;
+            $task = Task::with(['status_id', 'user_id'])->whereStatus(0)->whereId($taskCreated->id)->first();;
 
             return response()->json(['message' => 'Creacion exitosa', 'data' => $task], Response::HTTP_CREATED);
         } catch (\Throwable $th) {
@@ -109,7 +144,7 @@ class Task extends Model
     }
 
     /**
-     * Summary of taskById
+     * searching of a task taskById
      * @param mixed $id
      * @return \Illuminate\Http\JsonResponse
      */
@@ -117,16 +152,25 @@ class Task extends Model
     {
         try {
             //code...
-            $task = Task::with(['status_id'])->whereStatus(0)->whereId($id)->first();  
-            
+            $task = Task::with(['status_id', 'user_id'])->whereStatus(0)->whereId($id)->first([
+                'date_end',
+                'date_start',
+                'description',
+                'id',
+                'responsible',
+                'status_id',
+                'status',
+                'title',
+                'user_id',
+            ]);
+
             if (empty($task)) {
                 return response()->json(['message' => 'Sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
             }
 
-            if(!Gate::allows('read-by-id-task', $task)) {
+            if (!Gate::allows('read-by-id-task', $task)) {
                 return response()->json(['message' => 'Sin Autorizacion', 'data' => []], Response::HTTP_FORBIDDEN);
             }
-            
         } catch (\Throwable $th) {
             //throw $th;
             Log::error('Error en el metodo taskById' . json_encode($th->getMessage()));
@@ -137,7 +181,7 @@ class Task extends Model
     }
 
     /**
-     * Summary of updatedStatuTask
+     * updating the of a task updatedTask
      * @param mixed $data
      * @param mixed $statusTask
      * @return \Illuminate\Http\JsonResponse
@@ -155,7 +199,13 @@ class Task extends Model
                 return response()->json(['message' => 'Sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
             }
 
-            Task::whereId($task->id)->update(['description' => $data->description]);
+            Task::whereId($task->id)->update([
+                'date_end' => $data->date_end,
+                'date_start' => $data->date_start,
+                'description' => $data->description,
+                'responsible' => $data->responsible,
+                'title' => $data->title,
+            ]);
 
             $task = Task::taskById($task->id);
         } catch (\Throwable $th) {
@@ -166,8 +216,9 @@ class Task extends Model
 
         return response()->json(['message' => 'informacion actualizada', 'data' => $task->original['data']], Response::HTTP_OK);
     }
+
     /**
-     * Summary of deletedStatuTask
+     * Task Of Deleted deletedTask
      * @param mixed $statusTask
      * @return \Illuminate\Http\JsonResponse
      */
@@ -192,5 +243,44 @@ class Task extends Model
         }
 
         return response()->json(['message' => 'informacion eliminada', 'data' => ['id' => $getTask->id]], Response::HTTP_OK);
+    }
+
+    /**
+     * updating the status of a task updatedStatusTask
+     * @param mixed $data
+     * @param mixed $statusTask
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public static function updatedStatusTask($request, $id): JsonResponse
+    {
+        try {
+            $statusTaskExist = StatusTask::statuTaskById($request->status);
+            if (!$statusTaskExist->getData()->data) {
+                return $statusTaskExist;
+            }
+
+            //Autenticacion
+            $getTask = Task::whereId($id)->whereStatus(0)->first();
+            if (!Gate::allows('update-task', $getTask)) {
+                return response()->json(['message' => 'Sin Autorizacion', 'data' => []], Response::HTTP_FORBIDDEN);
+            }
+
+            if (empty($getTask)) {
+                return response()->json(['message' => 'Sin informacion', 'data' => []], Response::HTTP_NOT_FOUND);
+            }
+
+            /// Validar el status a enviar
+            Task::whereId($id)->update([
+                'status_id' => $request->status
+            ]);
+
+            $task = Task::taskById($id);
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error('Error en el metodo updatedTask' . json_encode($th->getMessage()));
+            return response()->json(['message' => 'Houston tenemos problemas'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return response()->json(['message' => 'informacion actualizada', 'data' => $task->original['data']], Response::HTTP_OK);
     }
 }

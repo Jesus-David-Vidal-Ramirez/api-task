@@ -6,11 +6,13 @@ services:
             args:
                 WWWGROUP: '${WWWGROUP}'
         image: 'sail-8.3/app'
+        container_name: Laravel
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
-            - '${APP_PORT:-80}:80'
+            - '${APP_PORT:-8084}:80'
             - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+            - '${REVERB_PORT:-8080}:${REVERB_PORT:-8080}'
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
@@ -67,7 +69,7 @@ services:
             retries: 3
             timeout: 5s
     meilisearch:
-        image: 'getmeili/meilisearch:latest'
+        image: 'getmeili/meilisearch:v1.11.3'
         ports:
             - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
         environment:

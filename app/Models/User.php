@@ -77,7 +77,8 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /// Services
-    public static function login( $request ){
+    public static function login($request)
+    {
         $credentials = $request->only('email', 'password');
 
         try {
@@ -88,8 +89,7 @@ class User extends Authenticatable implements JWTSubject
         $oUser = Auth::user();
 
         try {
-            if($oUser->status !== 0) return response()->json(['error' => 'Inactive user', 'status' => 'error'], Response::HTTP_BAD_REQUEST);
-            
+            if ($oUser->status !== 0) return response()->json(['error' => 'Inactive user', 'status' => 'error'], Response::HTTP_BAD_REQUEST);
         } catch (JWTException $th) {
             return response()->json(['error' => 'Could not create token'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -98,7 +98,8 @@ class User extends Authenticatable implements JWTSubject
         return response()->json($oUser, Response::HTTP_OK);
     }
 
-    public static function getUser(): JsonResponse {
+    public static function getUser(): JsonResponse
+    {
         try {
             if (! $user = JWTAuth::parseToken()->authenticate()) {
                 return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
@@ -110,7 +111,8 @@ class User extends Authenticatable implements JWTSubject
         return response()->json(compact('user'));
     }
 
-    public static function register($request): JsonResponse {
+    public static function register($request): JsonResponse
+    {
         // Se puede separa la logica en las rules
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -118,7 +120,7 @@ class User extends Authenticatable implements JWTSubject
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), Response::HTTP_BAD_REQUEST);
         }
 
@@ -130,7 +132,6 @@ class User extends Authenticatable implements JWTSubject
 
         $token = JWTAuth::fromUser($user);
 
-        return response()->json(compact('user','token'), Response::HTTP_CREATED);
+        return response()->json(compact('user', 'token'), Response::HTTP_CREATED);
     }
-
 }

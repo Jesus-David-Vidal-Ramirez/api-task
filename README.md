@@ -71,10 +71,36 @@ Now all we have to do is execute the following command to run it locally
 ```
 php artisan serve
 ```
+### RUN DOCKER
+```
+npm install
+```
+
+```
+docker compose up
+```
+
+```
+docker exec -it Laravel composer install
+```
+
+```
+docker compose down
+```
+
+```
+docker compose up
+```
+Cualquier comando que se quiera realizar se le agrega docker exec -it Laravel comando
+- example 
+```
+docker exec -it Laravel php artisan key:generate
+```
+
 
 ## API Documentation
 
 ### Postman
-To perform various queries to the API endpoints, you can use the following EndPoint
+To perform various queries to the API endpoints, you can use the following URI
 
 - [Collections](https://documenter.getpostman.com/view/28858104/2sAYBSiYFu)

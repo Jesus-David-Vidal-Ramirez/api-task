@@ -14,7 +14,7 @@ class StatusTaskController extends Controller
     {
         return StatusTask::getStatusAll();
     }
-    
+
     /**
      * Store a newly created resource in storage.
      */
